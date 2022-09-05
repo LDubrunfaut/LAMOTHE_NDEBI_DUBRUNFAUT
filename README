@@ -101,12 +101,17 @@
 
       --- Recherche par mot clé ---
 
-      Si vous recherchez un fichier PDB par des mots clés dans son header, vous avez la possibilité de choisir si la recherche va chercher pour plusieurs mots clés les headers de PDB ayant l'un ou l'autre de ces mots clés (option or) ou si elle va chercher les headers de PDB ayant tous les mots clés saisis (option and).
+      Si vous recherchez un fichier PDB par des mots clés dans son header, vous 
+      avez la possibilité de choisir si la recherche va chercher pour plusieurs 
+      mots clés les headers de PDB ayant l'un ou l'autre de ces mots clés 
+      (option or) ou si elle va chercher les headers de PDB ayant tous les mots 
+      clés saisis (option and).
 
       ---
 
       La page des résultats de recherche vous affiche une liste de fichiers PDB
-      avec plusieurs informations, qui correspondent à votre recherche. Dans le cas où un seul fichier PDB correspond à votre recherche, vous êtes
+      avec plusieurs informations, qui correspondent à votre recherche. Dans le 
+      cas où un seul fichier PDB correspond à votre recherche, vous êtes
       directement redirigé vers la page du fichier PDB en question.
 
     2) About
