@@ -1,0 +1,302 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+################################################################################
+import sqlite3
+import os
+import random
+import re
+import my_library as ml
+from flask import Flask, request, flash, redirect, url_for, render_template
+################################################################################
+app = Flask(__name__, template_folder='templates')
+app.secret_key = "$d§u§n§n§o$"
+################################################################################
+# Fonction permettant d'afficher la home page
+@app.route('/')
+def homepage():
+    '''
+        Fonction permettant de générer une vue de la page home.html
+    '''
+    return render_template('home.html')
+
+# Fonction permettant d'afficher la page des statistiques
+@app.route('/about/')
+def about():
+    '''
+        Fonction permettant de générer une vue de la page about.html
+    '''
+    conn = sqlite3.connect('database.db')
+    prot = conn.execute(''' SELECT * FROM Protein ''')
+    nbr_prot= len(prot.fetchall())
+
+    ppii = conn.execute(''' SELECT pk_amino_acid FROM Assignation, AminoAcid WHERE assignation_SS = 'P' and (fk_pross = pk_assignation OR fk_dssp = pk_assignation) ''')
+    nbr_ppii= len(ppii.fetchall())
+
+    nb_ppii_prot = round(nbr_ppii / float(nbr_prot), 2)
+
+    homme = conn.execute(''' SELECT pdb_id FROM Protein WHERE organism = "HOMO SAPIENS"''')
+    nbr_homme = len(homme.fetchall())
+
+    resolution = conn.execute('''SELECT resolution FROM Protein ''')
+    reso = resolution.fetchall()
+    resolution = []
+    for res in reso :
+        resolution.append(res[0])
+    liste_reso = [min(resolution), max(resolution), round(sum(resolution)/float(len(resolution)), 2)]
+
+    size = conn.execute('''SELECT size FROM Protein ''')
+    s = size.fetchall()
+    size = []
+    for taille in s :
+        size.append(taille[0])
+    liste_taille = [min(size), max(size), round(sum(size)/float(len(size)), 2)]
+
+
+    conn.commit()
+    conn.close()
+    return render_template('about.html',nbr_prot=nbr_prot,nbr_ppii=nbr_ppii,nbr_homme=nbr_homme, liste_reso = liste_reso,
+                            nb_ppii_prot = nb_ppii_prot, liste_taille=liste_taille)
+
+# Fonction permettant d'afficher la page d'aide à l'utilisation
+@app.route('/help/')
+def help():
+    '''
+        Fonction permettant de générer une vue de la page help.html
+    '''
+    return render_template('help.html')
+
+# Fonction permettant d'afficher la page des statistiques
+@app.route('/sources/')
+def sources():
+    '''
+        Fonction permettant de générer une vue de la page sources.html
+    '''
+    return render_template('sources.html')
+
+# Fonction permettant d'afficher les résultats de recherche
+@app.route('/profil/<pdb_id>/')
+def profil(pdb_id):
+    '''
+        Fonction permettant de générer une vue d'un PDB précisément en fonction
+        des informations qu'il contient
+
+        Args :
+            pdb :
+    '''
+    dssp_pred=[]
+    pross_pred=[]
+    sequence_aa=[]
+    positions=[]
+    conn = sqlite3.connect('database.db')
+    # On récupère à nouveau les informations du pdb :
+    cursor = conn.execute('''SELECT * FROM Protein WHERE pdb_id = ?
+    ''',(pdb_id,));
+    for row in cursor:
+        pdb=ml.showpdb(row,'liste')
+
+    conn.commit()
+    # Sélectionner tous les AA du pdb considéré en ordonnant les résultats
+    # par position
+    cursor = conn.execute('''SELECT letter, fk_dssp, fk_pross, position FROM AminoAcid WHERE fk_protein = ? ORDER BY position '''
+    ,(pdb_id,));
+    # Pour chaque AA, ID_dssp, ID_pross
+    ROWS={}
+    for row in cursor:
+        ROWS[row[3]]={}
+        ROWS[row[3]]['aa']=row[0]
+        # On cherche l'assignation DSSP
+        cursor2 = conn.execute('''SELECT assignation_SS FROM Assignation WHERE pk_assignation = ?'''
+        ,(row[1],));
+        dssp_res = cursor2.fetchall()
+        # Si la requête est vide on ajoute un tiret
+        if(len(dssp_res) == 0 ):
+            ROWS[row[3]]['dssp']='_'
+        else :
+            #for row2 in cursor2:
+            ROWS[row[3]]['dssp']=dssp_res[0][0]
+
+        conn.commit()
+        # On cherche l'assignation PROSS
+        cursor2 = conn.execute('''SELECT assignation_SS FROM Assignation WHERE pk_assignation = ?'''
+        ,(row[2],));
+        pross_res = cursor2.fetchall()
+        # Si la requête est vide on ajoute un tiret
+        if(len(pross_res) == 0):
+            ROWS[row[3]]['pross']='_'
+        else :
+            #for row2 in cursor2:
+            #ROWS[row[3]]['pross']=row2[0]
+            ROWS[row[3]]['pross']=pross_res[0][0]
+        conn.commit()
+
+    for i in range(1,pdb['length']+1):
+        if i == 1 :
+            positions.append(i)
+        elif i % 10 == 0 :
+            positions.append(i)
+        else:
+            positions.append('_')
+
+        if i in ROWS :
+            sequence_aa.append(ROWS[i]['aa'])
+            dssp_pred.append(ROWS[i]['dssp'])
+            pross_pred.append(ROWS[i]['pross'])
+        else :
+            sequence_aa.append('_')
+            dssp_pred.append('_')
+            pross_pred.append('_')
+
+    conn.commit()
+    conn.close()
+
+    return render_template('profil.html',pdb=pdb,sequence_aa=sequence_aa,positions=positions,dssp_pred=dssp_pred,pross_pred=pross_pred)
+
+# Fonction permettant d'afficher les résultats de recherche
+@app.route('/search/result/<met>/<option_orand>/<min_res>/<max_res>/<min_length>/<max_length>/<keys_search>/')
+def result_search(keys_search,met,option_orand,min_res,max_res,min_length,max_length):
+    '''
+        Fonction permettant de générer une vue des résultats de recherche
+        dans la page result_search.html
+
+        Args :
+            keys_search : Chaîne de caractères contenant le mots clés associés
+                          à la recherche.
+            met : Chaîne de caractères contenant la méthode de recherche
+                  utilisée soit 'id', 'annotations' ou 'keywords'.
+            option_orand : Chaîne de caractères contenant pour la méthode de
+                           recherche 'annotations' ou 'keywords', l'option 'or'
+                           ou l'option 'and'.
+    '''
+    conn = sqlite3.connect('database.db')
+    liste_obj = []
+    ############################################################################
+    # Dans le cas de la recherche d'ID PDB une seule méthode de recherche
+    if met == 'id' :
+        keys_s=re.split(';',keys_search)
+        id_connu=[0]
+        # Pour chaque id pdb on recherche toutes les informations à afficher
+        for word in keys_s :
+            # Requête a modifier
+            cursor = conn.execute('''SELECT * FROM Protein WHERE pdb_id = ?
+            ''',(word,));
+            for row in cursor:
+                pdb=ml.showpdb(row,'liste')
+                # S'il existe un pdb correspondant
+                if pdb != {} :
+                    if pdb['pdb_id'] not in id_connu :
+                        liste_obj.append(pdb)
+                        id_connu.append(pdb['pdb_id'])
+            conn.commit()
+    ############################################################################
+    #Dans le cas de la recherche dans le type par mot clé, on a différentes
+    #méthodes de recherche
+    elif met == 'keywords' :
+        keys_s=re.split(';',keys_search)
+        no_doublon=[0]
+        # On souhaite les pdb qui match avec le mot clé 1 ou le mot clé 2 ou
+        #le mot clé 3 [etc]
+        if option_orand == 'or' :
+            # Pour chaque mot clé, les PDB associés
+            for word in keys_s :
+                cursor = conn.execute('''SELECT * FROM Protein WHERE type
+                LIKE ?''',("%"+word+"%",));
+                for row in cursor:
+                    pdb=ml.showpdb(row,'liste')
+                    if pdb != {} :
+                        # En vérifiant encore qu'on a pas de doublons
+                        if pdb['pdb_id'] not in no_doublon :
+                            no_doublon.append(pdb['pdb_id'])
+                            liste_obj.append(pdb)
+                conn.commit()
+        # On souhaite les pdb qui match avec le mot clé 1 et le mot clé 2 et
+        #le mot clé 3 [etc]
+        else :
+            liste_id_ok=ml.andsearch(keys_s)
+            # Pour toutes ces pdb qui ont réussit le test on les affiche
+            for id_pdb in liste_id_ok :
+                cursor = conn.execute('''SELECT * FROM Protein WHERE pdb_id = ?''',(id_pdb,));
+                for row in cursor:
+                    pdb=ml.showpdb(row,'liste')
+                    # S'il existe un pdb correspondant
+                    if pdb != {} :
+                        liste_obj.append(pdb)
+                conn.commit()
+    ############################################################################
+    # Sinon on cherche à display selon certains critères
+    else :
+        id_connu=[0]
+        cursor = conn.execute('''SELECT * FROM Protein WHERE (resolution BETWEEN ? AND ?) AND (size BETWEEN ? AND ?) '''
+        ,(min_res,max_res,min_length,max_length));
+        for row in cursor:
+            pdb=ml.showpdb(row,'liste')
+            # S'il existe un pdb correspondant
+            if pdb != {} :
+                if pdb['pdb_id'] not in id_connu :
+                    liste_obj.append(pdb)
+                    id_connu.append(pdb['pdb_id'])
+        conn.commit()
+    conn.close()
+    if len(liste_obj)==1 :
+        pdb=liste_obj[0]
+        return redirect(url_for('profil',pdb_id=pdb['pdb_id']))
+    else :
+        return render_template('result_search.html', liste_obj=liste_obj,met=met,min_res=min_res,max_res=max_res,min_length=min_length,max_length=max_length)
+
+# Fonction permettant d'afficher la recherche des mots clés
+@app.route('/search/', methods=['GET', 'POST'])
+def search():
+    '''
+        Fonction permettant de générer une vue du formulaire de recherche dans
+        la page search.html
+
+        Return : Redirige vers la fonction result_search et la vue associée
+    '''
+    if request.method == 'POST':
+        # La méthode va indiquer si on recherche des mots clés / id ou des
+        # PDB par leur résolution / taille
+        met=request.form['met']
+        option_orand=0
+        min_res=0
+        max_res=0
+        min_length=0
+        max_length=0
+        words_search=0
+        if met == 'menu' :
+            flash(u'You must choose a research method !', 'error')
+        elif met == 'display' :
+            min_res = request.form['min_res']
+            min_res=ml.clean_num(min_res)
+            if(min_res==""):
+                min_res=0
+            max_res = request.form['max_res']
+            max_res=ml.clean_num(max_res)
+            if(max_res==""):
+                max_res=5
+            min_length = request.form['min_length']
+            min_length=ml.clean_num(min_length)
+            if(min_length==""):
+                min_length=5
+            max_length = request.form['max_length']
+            max_length=ml.clean_num(max_length)
+            if(max_length==""):
+                max_length=300
+        else :
+            words_search = request.form['words']
+            w_search = ml.clean_kw(words_search)
+            if w_search == [] :
+                if met == "id":
+                    flash(u'You must enter at least one correct ID !', 'error')
+                    return render_template('search.html')
+                else :
+                    flash(u'You must enter at least one keyword !', 'error')
+                    return render_template('search.html')
+            else :
+                if met != 'id' :
+                    option_orand=request.form['orand']
+
+                words_search=";".join(w_search)
+        return redirect(url_for('result_search',keys_search=words_search,met=met,option_orand=option_orand,min_res=min_res,max_res=max_res,min_length=min_length,max_length=max_length))
+    return render_template('search.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
