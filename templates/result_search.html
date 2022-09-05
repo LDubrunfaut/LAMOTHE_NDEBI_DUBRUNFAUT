@@ -1,0 +1,91 @@
+{% extends 'bones.html' %}
+
+{% block title %}Search Result{% endblock %}
+
+{% block main %}
+    <a href= "{{ url_for('search')}}"> <h3> Return to Search Page </h3></a><br/>
+    {% if liste_obj == [] %}
+        <h1>No PDB available for your search.</h1>
+    {% else %}
+        {% if met == 'display'%}
+            <h3> Min resolution : {{ min_res }} </h3>
+            <h3> Max resolution : {{ max_res }} </h3>
+            <h3> Min length : {{ min_length }} </h3>
+            <h3> Max length : {{ max_length }} </h3>
+        {% endif %}
+        <div>
+            <h1> Search Results </h1>
+        </div>
+        <table class="tab2" id="mytable" frame=void rules=rows>
+          <thead>
+            <tr>
+                <th id="pdb_id" class="title">
+                  <h3>PDB</h3>
+                </th>
+                <th id="chain" class="title">
+                  <h3> Chain </h3>
+                </th>
+                <th id="title" class="title">
+                  <h3> Title </h3>
+                </th>
+                <th id="length" class="title">
+                  <h3> Length </h3>
+                </th>
+                <th id="resolution" class="title">
+                  <h3> Resolution </h3>
+                </th>
+                <th id="dssp_ppi_n" class="title">
+                  <h3> DSSP </br>PPI (n) </h3>
+                </th>
+                <th id="dssp_ppi_p" class="title">
+                  <h3> DSSP </br>PPI (%) </h3>
+                </th>
+                <th id="pross_ppi_n" class="title">
+                  <h3> PROSS</br>PPI (n) </h3>
+                </th>
+                <th id="pross_ppi_p" class="title">
+                  <h3> PROSS</br>PPI (%) </h3>
+                </th>
+            </tr>
+          <thead>
+          <tbody>
+            {% for obj in liste_obj %}
+                <tr>
+                    <td class="vertical-align: top">
+                        <a href= "{{ url_for('profil', pdb_id=obj['pdb_id']) }}"> <h3> {{ obj['pdb_id'] }} </h3></a>
+                    </td>
+                    <td style="vertical-align: top">
+                        {{ obj['chain'] }}
+                    </td>
+                    <td style="vertical-align: top">
+                        {{ obj['type'] }}
+                    </td>
+                    <td style="vertical-align: top">
+                        {{ obj['length'] }}
+                    </td>
+                    <td style="vertical-align: top">
+                        {{ obj['resolution'] }}
+                    </td>
+                    <td style="vertical-align: top">
+                        {{ obj['dssp_ppi_n'] }}
+                    </td>
+                    <td style="vertical-align: top">
+                        {{ obj['dssp_ppi_p'] }}
+                    </td>
+                    <td style="vertical-align: top">
+                        {{ obj['pross_ppi_n'] }}
+                    </td>
+                    <td style="vertical-align: top">
+                        {{ obj['pross_ppi_p'] }}
+                    </td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    {% endif %}
+    <script type="text/javascript">
+    $(function(){
+      $('#mytable').tablesorter();
+    });
+    </script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'bones.html' %}
+
+{% block title %}About{% endblock %}
+
+{% block main %}
+    <div>
+        <h1>Database statistics</h1>
+    </div>
+    <div>
+      <h3> Number of protein : {{nbr_prot}} </h3> </br>
+    </div>
+    <div>
+      <h3> Number of amino acid in PII structure : {{nbr_ppii}} </h3> </br>
+    </div>
+    <div>
+      <h3> Average number of PII structure per protein : {{nb_ppii_prot}} </h3> </br>
+    </div>
+
+    <div>
+      <h3> Number of proteins from <i> Homo sapiens </i> : {{nbr_homme}} </h3> </br>
+    </div>
+    <div>
+      <h3> Statistics on PDB resolutions (Å):</h3>
+      <ul>
+        <li>min : {{ liste_reso[0]}}</li>
+        <li> max : {{ liste_reso[1]}}</li>
+        <li> mean : {{ liste_reso[2]}}</li>
+      </ul>
+    </div>
+    <div>
+      <h3> Statistics on PDB size (amino acid number):</h3>
+      <ul>
+        <li>min : {{ liste_taille[0]}} </li>
+        <li>max : {{ liste_taille[1]}} </li>
+        <li>mean : {{ liste_taille[2]}}</li>
+      </ul>
+    </div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'bones.html' %}
+
+{% block title %}PDB prediction{% endblock %}
+
+{% block main %}
+    <div>
+      <h3> {{ pdb['pdb_id'] }} : {{ pdb['chain'] }}</h3>
+    </div>
+    <div>
+      <h3> Header : {{ pdb['type'] }}</h3>
+    </div>
+    <div class="content_container">
+      <a href="http://www.ebi.ac.uk/pdbe/entry/pdb/{{ pdb['pdb_id'] }}"> <h3>PDBsum {{ pdb['pdb_id'] }}</h3></a>
+    </div>
+    <div class="content_container">
+      <h3>Length : {{ pdb['length'] }} amino acids</h3>
+    </div>
+    <div class="content_container">
+      <h3>Resolution : {{ pdb['resolution'] }} Å</h3>
+    </div>
+    <div class="content_container">
+      <h3>DSSP PPII (n) : {{ pdb['dssp_ppi_n'] }}</h3>
+      <h3>DSSP PPII (%) : {{ pdb['dssp_ppi_p'] }}</h3>
+    </div>
+    <div class="content_container">
+      <h3>PROSS PPII (n) : {{ pdb['pross_ppi_n'] }}</h3>
+      <h3>PROSS PPII (%) : {{ pdb['pross_ppi_p'] }}</h3>
+    </div>
+    <table class="tab1">
+        {% set ic_start = 0 %}
+        {% set ic_stop = 55 %}
+        {% set nb = pdb['length']/55 %}
+        {% for i in range(nb|round|int +1) %}
+        <tr>
+            <td class="left_text">
+                POS
+            </td>
+            {% for pos in positions[ic_start:ic_stop] %}
+            <td>
+                {{ pos }}
+            </td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td class="left_text">
+                SEQ
+            </td>
+            {% for aa in sequence_aa[ic_start:ic_stop] %}
+            <td>
+                {{ aa }}
+            </td>
+           {% endfor %}
+        </tr>
+        <tr>
+          <td class="left_text" >
+                DSSP
+            </td>
+            {% for pred in dssp_pred[ic_start:ic_stop] %}
+            <td>
+                  {% if pred == 'H' %}
+                    <font color="red">{{ pred }}</font>
+                  {% elif pred == 'B' %}
+                    <font color="green">{{ pred }}</font>
+                  {% elif pred == 'P' %}
+                    <font color="blue"><u>{{ pred }}</u></font>
+                  {% else %}
+                    <font color="grey">{{ pred }}</font>
+                  {% endif %}
+            </td>
+              {% endfor %}
+        </tr>
+        <tr>
+            <td class="left_text" >
+                PROSS
+            </td>
+            {% for pred in pross_pred[ic_start:ic_stop] %}
+            <td>
+                  {% if pred == 'H' %}
+                    <font color="red">{{ pred }}</font>
+                  {% elif pred == 'B' %}
+                    <font color="green">{{ pred }}</font>
+                  {% elif pred == 'P' %}
+                    <font color="blue"><u>{{ pred }}</u></font>
+                  {% else %}
+                    <font color="grey">{{ pred }}</font>
+                  {% endif %}
+            </td>
+              {% endfor %}
+        </tr>
+        <tr> </tr><tr> </tr><tr> </tr><tr> </tr><tr> </tr><tr> </tr>
+        {% set ic_start = ic_stop  %}
+        {% set ic_stop = ic_stop + 55 %}
+        {% endfor %}
+    </table>
+{% endblock %}

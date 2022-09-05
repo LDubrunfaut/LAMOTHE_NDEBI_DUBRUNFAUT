@@ -1,0 +1,34 @@
+{% extends 'bones.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block main %}
+  <div>
+    <h1> Welcome to our secondary structure assignment database </h1>
+    <p> The aim of this database is to store non-redundant (sequence ID < 20%)  high resolution ( < 1.6 A) crystal structures from the Protein DataBank (PDB) and to assign protein secondary structures to these proteins using various methods (DSSP and PROSS). The idea is to obtain a secondary structures consensus for each protein - more specifically a consensus of PolyProlines II (PPII) - by aligning secondary structure predictions obtained from different methods. PPIIs are a specific secondary structure that was initially discovered as a series of prolines forming a bend in the backbone. These were thought to be rare, however recent studies show that PPII often do not consist of prolines and thus are actually quite frequent. <br /><br />
+    This site had been created with <a href="https://www.python.org/">Python</a> language using <a href="http://flask.pocoo.org/">Flask module</a> and <a href="https://www.sqlite.org/">Sqlite3</a> database.<br /><br />
+    </p>
+  </div>
+
+  <div class="content_container">
+    <h2> Help to use this site ? </h2>
+  	<div class="button_small">
+      <a href="{{ url_for('help') }}">Here</a>
+    </div><!--close button_small-->
+  </div>
+
+  <div class="content_container">
+    <h2> Database statistics </h2>
+  	<div class="button_small">
+      <a href="{{ url_for('about') }}">Here</a>
+    </div><!--close button_small-->
+  </div>
+
+  <div class="content_container">
+    <h2> References </h2>
+  	<div class="button_small">
+      <a href="{{ url_for('sources') }}">Here</a>
+    </div><!--close button_small-->
+  </div>
+
+{% endblock %}

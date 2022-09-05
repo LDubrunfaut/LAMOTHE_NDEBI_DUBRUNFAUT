@@ -1,0 +1,64 @@
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js" /></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $('.orand').hide(); // on cache le champ par défaut
+    $('.size').hide();
+    $('.kw').hide();
+    $('.words').hide();
+    $('select[name="met"]').change(function() { // lorsqu'on change de valeur dans la liste
+    var valeur = $(this).val(); // valeur sélectionnée
+
+        if(valeur != 'met') { // si non vide
+            if(valeur == 'id') {
+                $('.kw').show();
+                $('.orand').hide();
+                $('.size').hide();
+                $('.words').show();
+            } else if (valeur == 'keywords'){
+                $('.kw').show();
+                $('.orand').show();
+                $('.size').hide();
+                $('.words').show();
+            } else if (valeur == 'display'){
+                $('.orand').hide();
+                $('.kw').hide();
+                $('.size').show();
+                $('.words').hide();
+            }
+        }
+    });
+
+});
+</script>
+
+{% extends 'bones.html' %}
+
+{% block title %}Search in Database{% endblock %}
+
+{% block main %}
+    <div class="form_settings">
+        <h1>Search PDB structure</h1>
+        <form method="post" enctype="multipart/form-data">
+            <p><span>Request type</span> <select name="met">
+                  <option value="menu">-- Choose --</option>
+                  <option value="id">Seach by PDB ID</option>
+                  <option value="display">Display PDB in Database</option>
+                  <option value="keywords">Search by Keywords</option>
+            </select></p>
+            <p class="words" style="padding-top: 15px"> Separate your search words by spaces or end of line
+            <p class="kw" style="padding-top: 15px"><span>&nbsp;</span><textarea name="words" rows="3" cols="15"></textarea></p><br/><br/>
+            <p class="orand" style="padding-top: 15px"> Word search option example : OR = word1 or word 2 -- AND = word1 and word2
+            <p class="orand" style="padding-top: 15px"><label for="or"><span>OR</span></label><input type="radio" name="orand" value="or" id="or" checked="checked"></p>
+            <p class="orand" style="padding-top: 15px"><label for="and"><span>AND</span></label><input type="radio" name="orand" value="and" id="and"></p>
+            <p class="size" style="padding-top: 15px"><span>&nbsp;</span> Min resolution (default : 0)
+            <p class="size" style="padding-top: 15px"><span>&nbsp;</span><textarea name="min_res" rows="1" cols="5"></textarea></p>
+            <p class="size" style="padding-top: 15px"><span>&nbsp;</span> Max resolution (default : 5)
+            <p class="size" style="padding-top: 15px"><span>&nbsp;</span><textarea name="max_res" rows="1" cols="5"></textarea></p>
+            <p class="size" style="padding-top: 15px"><span>&nbsp;</span> Min length (default : 5)
+            <p class="size" style="padding-top: 15px"><span>&nbsp;</span><textarea name="min_length" rows="1" cols="5"></textarea></p>
+            <p class="size" style="padding-top: 15px"><span>&nbsp;</span> Max length (default : 300)
+            <p class="size" style="padding-top: 15px"><span>&nbsp;</span><textarea name="max_length" rows="1" cols="5"></textarea></p><br/>
+            <p style="padding-top: 15px"><span>&nbsp;</span><input id="btsub" type="submit" value="Search" /></p>
+        </form>
+    </div><!--close form_settings-->
+{% endblock %}
